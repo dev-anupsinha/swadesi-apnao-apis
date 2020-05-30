@@ -5,7 +5,7 @@ var connectionProvider = require("./config/mysqlConnectionStringProvider"); //co
 
 app.use(bodyparser.json());
 
-app.listen(3000, () =>
+app.listen(process.env.PORT, () =>
   console.log("Express server is runnig at port no : 3000")
 );
 
