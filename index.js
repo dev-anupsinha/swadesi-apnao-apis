@@ -1,93 +1,51 @@
-const express = require("express");
-var app = express();
-const bodyparser = require("body-parser");
-var multer = require("multer");
-var connectionProvider = require("./config/mysqlConnectionStringProvider"); //connection path
+const express = require("express"),
+  bodyParser = require("body-parser"),
+  cors = require("cors");
 
-app.use(bodyparser.json());
-const upload = multer({ dest: __dirname + "/uploads/images" });
-app.use(express.static("public"));
+const app = express();
 
-const PORT = process.env.PORT || 3000; // process.env.PORT
+// sricting the URL to be exposed
+// var corsOptions = {
+//   origin: "http://localhost:8081"
+// };
 
-app.listen(PORT, () =>
-  console.log("Express server is runnig at port no :", PORT)
-);
+app.use(cors());
 
-var connection = connectionProvider.mysqlConnectionStringProvider.getMySqlConnection();
+// parse requests of content-type - application/json
+app.use(bodyParser.json());
 
-//Get all employees
-app.get("/allProductList", (req, res) => {
-  connection.query("SELECT * FROM v_product_list", (err, rows, fields) => {
-    if (!err) res.send(rows);
-    else console.log(err);
-  });
-});
+// parse requests of content-type - application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
 
-//Get an employees
-app.get("/getProductItemByState/:stateCode", (req, res) => {
-  connection.query(
-    "SELECT * FROM v_product_list WHERE state_code = ?",
-    [req.params.stateCode],
-    (err, rows, fields) => {
-      if (!err) res.send(rows);
-      else console.log(err);
-    }
-  );
-});
+//const db = require("./app/models");
 
-//Image upload api html in node server only
-//upload.array()  --for multiplw image upload
-app.post("/upload", upload.single("photo"), (req, res) => {
-  if (req.file) {
-    res.json(req.file);
-  } else throw "error";
-});
-
-//Delete an employees
-// app.delete("/employees/:id", (req, res) => {
-//   connection.query(
-//     "DELETE FROM Employee WHERE EmpID = ?",
-//     [req.params.id],
-//     (err, rows, fields) => {
-//       if (!err) res.send("Deleted successfully.");
-//       else console.log(err);
-//     }
-//   );
+//db.sequelize.sync();
+// // drop the table if it already exists
+// db.sequelize.sync({ force: true }).then(() => {
+//   console.log("Drop and re-sync db.");
 // });
 
-//Insert an employees
-// app.post("/employees", (req, res) => {
-//   let emp = req.body;
-//   var sql =
-//     "SET @EmpID = ?;SET @Name = ?;SET @EmpCode = ?;SET @Salary = ?; \
-//     CALL EmployeeAddOrEdit(@EmpID,@Name,@EmpCode,@Salary);";
-//   connection.query(
-//     sql,
-//     [emp.EmpID, emp.Name, emp.EmpCode, emp.Salary],
-//     (err, rows, fields) => {
-//       if (!err)
-//         rows.forEach((element) => {
-//           if (element.constructor == Array)
-//             res.send("Inserted employee id : " + element[0].EmpID);
-//         });
-//       else console.log(err);
-//     }
-//   );
-// });
+// test route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Swadesi apnai test api." });
+});
 
-//Update an employees
-// app.put("/employees", (req, res) => {
-//   let emp = req.body;
-//   var sql =
-//     "SET @EmpID = ?;SET @Name = ?;SET @EmpCode = ?;SET @Salary = ?; \
-//     CALL EmployeeAddOrEdit(@EmpID,@Name,@EmpCode,@Salary);";
-//   connection.query(
-//     sql,
-//     [emp.EmpID, emp.Name, emp.EmpCode, emp.Salary],
-//     (err, rows, fields) => {
-//       if (!err) res.send("Updated successfully");
-//       else console.log(err);
-//     }
-//   );
-// });
+require("./routes/products.routes")(app);
+
+// set port, listen for requests
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
+});
+
+// Find 404 and hand over to error handler
+app.use((req, res, next) => {
+  next(createError(404));
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+  console.error(err.message);
+  if (!err.statusCode) err.statusCode = 500;
+  res.status(err.statusCode).send(err.message);
+});
