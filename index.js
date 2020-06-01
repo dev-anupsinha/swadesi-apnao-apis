@@ -1,12 +1,17 @@
 const express = require("express");
 var app = express();
 const bodyparser = require("body-parser");
+var multer = require("multer");
 var connectionProvider = require("./config/mysqlConnectionStringProvider"); //connection path
 
 app.use(bodyparser.json());
-//process.env.PORT
-app.listen(process.env.PORT, () =>
-  console.log("Express server is runnig at port no :", process.env.PORT)
+const upload = multer({ dest: __dirname + "/uploads/images" });
+app.use(express.static("public"));
+
+const PORT = process.env.PORT || 3000; // process.env.PORT
+
+app.listen(PORT, () =>
+  console.log("Express server is runnig at port no :", PORT)
 );
 
 var connection = connectionProvider.mysqlConnectionStringProvider.getMySqlConnection();
@@ -29,6 +34,13 @@ app.get("/getProductItemByState/:stateCode", (req, res) => {
       else console.log(err);
     }
   );
+});
+
+//upload.array()  --for multiplw image upload
+app.post("/upload", upload.single("photo"), (req, res) => {
+  if (req.file) {
+    res.json(req.file);
+  } else throw "error";
 });
 
 //Delete an employees
