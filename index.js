@@ -36,6 +36,7 @@ app.get("/getProductItemByState/:stateCode", (req, res) => {
   );
 });
 
+//Image upload api html in node server only
 //upload.array()  --for multiplw image upload
 app.post("/upload", upload.single("photo"), (req, res) => {
   if (req.file) {
